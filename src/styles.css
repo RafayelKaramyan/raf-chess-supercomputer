@@ -56,3 +56,12 @@
 @media(max-width:900px){.review-layout{grid-template-columns:1fr}.review-side{min-height:unset}}
 
 .opening-vault{margin-bottom:16px}.opening-filters{display:flex;gap:8px;margin:14px 0;flex-wrap:wrap}.opening-filters select{background:#08130d;border:1px solid #263b2d;color:#dce9df;border-radius:6px;padding:9px 12px;font:11px 'DM Sans'}.opening-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}.opening-card{display:flex;flex-direction:column;align-items:flex-start;gap:9px;padding:14px;border:1px solid #263b2d;background:#0e1a13;border-radius:9px;min-width:0}.opening-card-top{display:flex;align-items:center;justify-content:space-between;width:100%}.opening-rarity{font:9px 'DM Mono';letter-spacing:.8px;color:#c3a875;text-transform:uppercase}.opening-card h3{font-size:13px;margin:2px 0 0;color:#e6f0e8}.opening-card>small{font:9px 'DM Mono';color:#829889}.opening-card code{display:block;width:100%;overflow-wrap:anywhere;white-space:pre-wrap;background:#08130d;border:1px solid #263b2d;border-radius:5px;padding:9px;color:#b3d6bd;font:10px 'DM Mono';line-height:1.6}.opening-card p{font-size:11px;line-height:1.55;color:#a5b8aa;margin:0}.opening-warning{display:grid;gap:4px;border-left:2px solid #9a7840;padding:7px 9px;background:#17180f;width:100%}.opening-warning b{font:9px 'DM Mono';color:#d5b77d;text-transform:uppercase;letter-spacing:.6px}.opening-warning span{font-size:10px;line-height:1.5;color:#b8b09a}.opening-card .secondary{margin-top:auto;font-size:10px}@media(max-width:760px){.opening-cards{grid-template-columns:1fr}}
+
+
+.repertoire-core{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0 12px}
+.repertoire-core article{padding:15px;border:1px solid #2b4934;border-radius:9px;background:linear-gradient(145deg,#13251a,#0d1913);min-width:0}
+.repertoire-core h3{font:600 15px 'Space Grotesk';color:#e5f1e8;margin:12px 0 8px}
+.repertoire-core p{font-size:11px;line-height:1.65;color:#a6b9aa;margin:0 0 12px}
+.repertoire-core small{display:block;border-top:1px solid #294031;padding-top:9px;color:#8ab497;font-size:10px;line-height:1.5}
+.repertoire-disclaimer{border-left:2px solid #9a7840;padding:8px 11px;background:#17180f}
+@media(max-width:900px){.repertoire-core{grid-template-columns:1fr}}
