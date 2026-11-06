@@ -35,7 +35,7 @@ function App(){
    if(game.get(sq)?.color===game.turn())setSelected(sq);
  };
  const reset=()=>{setGame(new Chess());setHistory([]);setSelected(null);setMessage("New game — White to move");};
- const undo=()=>{const next=new Chess(game.fen());next.undo();setGame(next);setHistory(next.history());setMessage(next.turn()==="w"?"White to move":"Black to move");setSelected(null);};
+ const undo=()=>{const next=new Chess();try{next.loadPgn(game.pgn());next.undo();setGame(next);setHistory(next.history());setMessage(next.turn()==="w"?"White to move":"Black to move");}catch{setMessage("This position cannot be undone from the current PGN");}setSelected(null);};
  const importPgn=()=>{try{const next=new Chess();next.loadPgn(pgn);setGame(next);setHistory(next.history());setMessage("PGN imported successfully");}catch{setMessage("Could not read PGN. Check its format.");}};
  const persistGames=(items:SavedGame[])=>{setSavedGames(items);localStorage.setItem("raf-saved-games",JSON.stringify(items));};
  const saveGame=()=>{if(!game.history().length){setMessage("Play or import moves before saving");return;}const item:SavedGame={id:Date.now().toString(),name:gameName.trim()||"Training game",pgn:game.pgn(),savedAt:new Date().toLocaleDateString()};persistGames([item,...savedGames]);setMessage("Game saved in this browser");};
