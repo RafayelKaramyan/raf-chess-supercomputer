@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Chess } from "chess.js";
 import { Activity, BookOpen, Brain, Plus, Target, Trash2 } from "lucide-react";
 type OpeningEntry = { id: string; name: string; pgn: string; notes: string };
