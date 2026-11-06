@@ -57,3 +57,67 @@ export function OpponentLab() {
  <section className="panel"><div className="panel-head"><div><div className="eyebrow">OPPONENT PROFILE</div><h2>Add preparation data</h2></div><span className="tag">GAME-BASED</span></div><div className="module-form"><label>OPPONENT NAME / ANONYMIZED ID</label><input value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. Opponent A"/><label>COLOR TO PREPARE AGAINST</label><select value={color} onChange={e=>setColor(e.target.value)}><option>Both</option><option>White</option><option>Black</option></select><label>GAME PGN (OPTIONAL)</label><textarea value={pgn} onChange={e=>setPgn(e.target.value)} placeholder="Paste one game in PGN format..."/><label>PREPARATION NOTES</label><textarea value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Observed openings, recurring decisions, candidate plans..."/>{error&&<p className="form-error">{error}</p>}<button className="primary" onClick={save}><Plus size={15}/> Save opponent profile</button></div></section>
  <section className="panel module-list-panel"><div className="panel-head"><div><div className="eyebrow">SCOUTING DATABASE</div><h2>Opponent profiles</h2></div><span className="tag">{items.length} PROFILES</span></div>{items.length===0?<div className="empty-state"><div className="empty-icon"><Brain/></div><b>No opponent profiles</b><span>Add an opponent and attach games or notes to begin preparation.</span></div>:<div className="module-list">{items.map(item=><div className="module-item" key={item.id}><div className="module-item-main"><b>{item.name} <span className="tag">{item.color}</span></b>{item.pgn&&<code>{item.pgn}</code>}{item.notes&&<p>{item.notes}</p>}</div><button className="delete-game" onClick={()=>remove(item.id)} title="Delete opponent"><Trash2 size={14}/></button></div>)}</div>}</section></>;
 }
+
+
+type ReviewMove = import("chess.js").Move;
+const reviewFiles = ["a","b","c","d","e","f","g","h"];
+const reviewGlyph: Record<string,string> = {wk:"♔",wq:"♕",wr:"♖",wb:"♗",wn:"♘",wp:"♙",bk:"♚",bq:"♛",br:"♜",bb:"♝",bn:"♞",bp:"♟"};
+
+export function GameReviewLab() {
+ const [pgn,setPgn]=useState("");
+ const [moves,setMoves]=useState<ReviewMove[]>([]);
+ const [headers,setHeaders]=useState<Record<string,string>>({});
+ const [index,setIndex]=useState(0);
+ const [orientation,setOrientation]=useState<"white"|"black">("white");
+ const [error,setError]=useState("");
+ const load=()=>{
+  try{
+   const parsed=new Chess();
+   parsed.loadPgn(pgn);
+   setMoves(parsed.history({verbose:true}));
+   setHeaders(parsed.getHeaders());
+   setIndex(0);
+   setError("");
+  }catch{
+   setError("PGN could not be parsed. Check the notation and move order.");
+  }
+ };
+ const position=useMemo(()=>{
+  const current=new Chess();
+  for(const move of moves.slice(0,index)){
+   current.move({from:move.from,to:move.to,promotion:move.promotion});
+  }
+  return current;
+ },[moves,index]);
+ const board=position.board();
+ const squares=orientation==="white"
+  ?board.flatMap((row,r)=>row.map((piece,c)=>({piece,sq:(reviewFiles[c]+(8-r)) as import("chess.js").Square,r,c})))
+  :[...board].reverse().flatMap((row,r)=>[...row].reverse().map((piece,c)=>({piece,sq:(reviewFiles[7-c]+(r+1)) as import("chess.js").Square,r,c})));
+ const copyFen=async()=>{
+  try{await navigator.clipboard.writeText(position.fen());setError("FEN copied to clipboard.");}
+  catch{setError("Clipboard access is unavailable. Select and copy the FEN below.");}
+ };
+ const copyPgn=async()=>{
+  try{await navigator.clipboard.writeText(moves.length?(()=>{const g=new Chess();for(const move of moves)g.move({from:move.from,to:move.to,promotion:move.promotion});return g.pgn();})():"");setError("PGN copied to clipboard.");}
+  catch{setError("Clipboard access is unavailable.");}
+ };
+ return <>
+  <div className="page-heading"><div><div className="eyebrow">POST-GAME STUDY / MOVE-BY-MOVE REPLAY</div><h1>Game review</h1><p>Import a PGN, replay every move, inspect positions, and copy FEN for deeper analysis.</p></div><div className="board-actions"><button className="secondary" onClick={()=>setOrientation(orientation==="white"?"black":"white")}>Flip board</button><button className="secondary" onClick={copyPgn} disabled={!moves.length}>Copy PGN</button></div></div>
+  <div className="review-layout">
+   <section className="board-panel">
+    <div className="board-topline"><span><i className="status-dot"/>{index===0?"Starting position":index===moves.length?"Final position":`After ${index} half-moves`}</span><span>{position.turn()==="w"?"WHITE":"BLACK"} TO MOVE</span></div>
+    <div className="board-wrap"><div className="chessboard">{squares.map(({piece,sq,r,c})=><div key={sq} className={`square ${(r+c)%2===0?"light":"dark"}`}>{piece&&<span className={piece.color==="w"?"piece white-piece":"piece black-piece"}>{reviewGlyph[piece.color+piece.type]}</span>}{c===0&&<small className="rank">{orientation==="white"?8-r:r+1}</small>}{r===7&&<small className="file">{orientation==="white"?reviewFiles[c]:reviewFiles[7-c]}</small>}</div>)}</div></div>
+    <div className="review-controls"><button className="secondary" onClick={()=>setIndex(0)} disabled={!moves.length||index===0}>Start</button><button className="secondary" onClick={()=>setIndex(Math.max(0,index-1))} disabled={index===0}>Previous</button><strong>{index} / {moves.length}</strong><button className="primary" onClick={()=>setIndex(Math.min(moves.length,index+1))} disabled={index===moves.length}>Next</button><button className="secondary" onClick={()=>setIndex(moves.length)} disabled={!moves.length||index===moves.length}>End</button></div>
+    <div className="fen-box"><div className="panel-head"><b>Current FEN</b><button className="secondary" onClick={copyFen}>Copy FEN</button></div><code>{position.fen()}</code></div>
+   </section>
+   <section className="panel review-side">
+    <div className="panel-head"><div><div className="eyebrow">GAME DETAILS</div><h2>{headers.Event||"Imported game"}</h2></div><span className="tag">{moves.length} PLIES</span></div>
+    <div className="review-meta"><span>White <b>{headers.White||"—"}</b></span><span>Black <b>{headers.Black||"—"}</b></span><span>Event <b>{headers.Event||"—"}</b></span><span>Result <b>{headers.Result||"*"}</b></span></div>
+    <label className="review-label">MOVE LIST · SELECT A MOVE TO JUMP</label>
+    {moves.length===0?<div className="empty-state"><div className="empty-icon">♞</div><b>No game loaded</b><span>Paste a PGN below to start reviewing.</span></div>:<div className="review-moves">{Array.from({length:Math.ceil(moves.length/2)},(_,i)=><div className="review-move-row" key={i}><span>{i+1}.</span><button className={index===i*2+1?"chosen":""} onClick={()=>setIndex(i*2+1)}>{moves[i*2].san}</button>{moves[i*2+1]&&<button className={index===i*2+2?"chosen":""} onClick={()=>setIndex(i*2+2)}>{moves[i*2+1].san}</button>}</div>)}</div>}
+   </section>
+  </div>
+  <section className="panel review-import"><div className="panel-head"><div><div className="eyebrow">PGN INPUT</div><h2>Load a game</h2></div><span className="tag">CHESS.JS VALIDATION</span></div><textarea value={pgn} onChange={e=>setPgn(e.target.value)} placeholder={'[Event "Training game"]\n[White "Player"]\n[Black "Opponent"]\n\n1. c4 e5 2. Nc3 Nf6 *'}/>{error&&<p className={error.includes("copied")?"form-success":"form-error"}>{error}</p>}<button className="primary" onClick={load}>Load PGN for review</button></section>
+  <p className="muted">This module replays legal PGN moves and exposes the position FEN. It does not yet provide engine evaluations, best-move suggestions, or accuracy scores.</p>
+ </>;
+}
