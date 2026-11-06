@@ -1,13 +1,16 @@
 # RAF CHESS SUPERCOMPUTER
 
-A chess-training workspace for player development and coaching.
+**Private source repository:** https://github.com/RafayelKaramyan/raf-chess-supercomputer
+
+A chess-training workspace for player development and coaching, built with React, TypeScript, Vite, and chess.js.
 
 ## Current prototype
 
-- Dashboard with player rating baseline and target.
-- Interactive chessboard powered by `chess.js`.
-- Legal move validation, move history, undo, board flip, reset, and PGN import.
-- Student directory stored in the current browser using localStorage.
+- Dashboard with OTB rating baseline (1794) and target (2200).
+- Interactive chessboard with legal move validation.
+- Move history, board flip, reset, undo, and PGN import/export.
+- Save, reopen, and delete PGN games in the current browser.
+- Student directory stored in the current browser.
 - Opening, opponent-preparation, tactics, and performance module foundations.
 - Responsive dark interface.
 
@@ -25,15 +28,23 @@ npm run build
 npm run preview
 ```
 
-## Current limitations
+## Deploy as a website
 
-This is the first frontend prototype. Student records are stored only in the browser that created them. There is no authentication, cloud database, Stockfish engine, automatic game evaluation, or verified tactical puzzle service yet. The opening/opponent/tactics/performance areas are module foundations, not completed analysis systems.
+The repository includes `vercel.json`. Import this private GitHub repository into a Vercel project and deploy with the detected Vite settings. The deployment will create a public or access-restricted website depending on the Vercel project settings. Do not assume the website is live until the deployment succeeds.
 
-## Planned architecture
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for the steps.
 
-1. Authentication and persistent database for player and coach/student profiles.
-2. PGN game library and structured game annotations.
-3. Stockfish WebAssembly integration for real engine-backed analysis.
-4. Opening repertoire tree and opponent database.
-5. Training plans, performance metrics, and progress reports.
-6. Secure deployment with access controls.
+## Data and current limitations
+
+This is an early frontend prototype. Student records and saved games are stored in browser localStorage on the device/browser where they were created. They are not synced across devices and are not backed up to a cloud database.
+
+There is currently no user authentication, cloud database, Stockfish engine, automatic game evaluation, or verified tactical puzzle service. The opening/opponent/tactics/performance areas are foundations for future modules, not completed analysis systems.
+
+## Roadmap
+
+1. Add cloud authentication and database-backed player and coach/student profiles.
+2. Build a searchable PGN library with annotations and game tagging.
+3. Integrate Stockfish WebAssembly and report real engine-backed evaluations.
+4. Build an opening repertoire tree and opponent preparation database.
+5. Add structured training plans, performance metrics, and progress reports.
+6. Add role-based access and privacy controls for student records.
