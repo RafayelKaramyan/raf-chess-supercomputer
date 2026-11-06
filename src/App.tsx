@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Chess, type Square } from "chess.js";
 import { Activity, BookOpen, Brain, ChevronLeft, ChevronRight, ClipboardList, Download, GraduationCap, LayoutDashboard, Plus, RotateCcw, Save, Target, Trash2, Upload, Users } from "lucide-react";
 import "./styles.css";
-import { OpeningLab, OpponentLab, PerformanceLab } from "./modules";
+import { OpeningLab, OpponentLab, PerformanceLab, TacticalTrainer } from "./modules";
 
 type SavedGame = { id: string; name: string; pgn: string; savedAt: string };
 type Tab = "overview" | "player" | "students" | "openings" | "opponents" | "tactics" | "performance";
@@ -54,7 +54,7 @@ function App(){
   {tab==="students"&&<><div className="page-heading"><div><div className="eyebrow">COACH WORKSPACE</div><h1>Student management</h1><p>A foundation for tracking individual learning journeys.</p></div></div><section className="panel"><div className="panel-head"><div><div className="eyebrow">STUDENT DIRECTORY</div><h2>Your students</h2></div><span className="tag">{students.length} REGISTERED</span></div><div className="add-student"><input value={studentName} onChange={e=>setStudentName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&addStudent()} placeholder="Student name"/><button className="primary" onClick={addStudent}><Plus size={16}/> Add student</button></div>{students.length===0?<div className="empty-state"><div className="empty-icon"><GraduationCap/></div><b>No students added</b><span>Add a student to begin building your coaching workspace.</span></div>:<div className="student-list">{students.map((s,i)=><div className="student-row" key={s+i}><div className="avatar">{s.slice(0,2).toUpperCase()}</div><div><b>{s}</b><small>Student profile · Progress not yet recorded</small></div><span className="tag">ACTIVE</span></div>)}</div>}</section></>}
   {tab==="openings"&&<OpeningLab/>}
   {tab==="opponents"&&<OpponentLab/>}
-  {tab==="tactics"&&<InfoPage eyebrow="CALCULATION TRAINING" title="Tactical trainer" desc="A dedicated calculation module is planned. No generated positions are presented as verified puzzles." cards={[["Candidate moves","Calculation discipline","List checks, captures, and threats"],["Visualization","Board awareness","Calculate variations without moving pieces"],["Puzzle library","Engine-verified positions","Puzzle import and validation planned"]]}/>}
+  {tab==="tactics"&&<TacticalTrainer/>}
   {tab==="performance"&&<PerformanceLab/>}
   <footer>RAF CHESS SUPERCOMPUTER <span>BUILD 0.1.0 · LOCAL PROTOTYPE</span></footer></div></main></div>
 }
