@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Chess, type Square } from "chess.js";
 import { Activity, BookOpen, Brain, ChevronLeft, ChevronRight, ClipboardList, Download, GraduationCap, LayoutDashboard, Plus, RotateCcw, Save, Target, Trash2, Upload, Users } from "lucide-react";
 import "./styles.css";
-import { OpeningLab, OpponentLab } from "./modules";
+import { OpeningLab, OpponentLab, PerformanceLab } from "./modules";
 
 type SavedGame = { id: string; name: string; pgn: string; savedAt: string };
 type Tab = "overview" | "player" | "students" | "openings" | "opponents" | "tactics" | "performance";
@@ -55,7 +55,7 @@ function App(){
   {tab==="openings"&&<OpeningLab/>}
   {tab==="opponents"&&<OpponentLab/>}
   {tab==="tactics"&&<InfoPage eyebrow="CALCULATION TRAINING" title="Tactical trainer" desc="A dedicated calculation module is planned. No generated positions are presented as verified puzzles." cards={[["Candidate moves","Calculation discipline","List checks, captures, and threats"],["Visualization","Board awareness","Calculate variations without moving pieces"],["Puzzle library","Engine-verified positions","Puzzle import and validation planned"]]}/>}
-  {tab==="performance"&&<InfoPage eyebrow="PROGRESS & DIAGNOSIS" title="Performance report" desc="Reliable performance metrics require your actual games and engine-backed analysis." cards={[["Game accuracy","Awaiting game data","Import PGNs to establish a baseline"],["Recurring weaknesses","Awaiting analysis","Classify errors by phase and type"],["Training plan","Personalized next step","Prioritize the highest-impact weaknesses"]]}/>}
+  {tab==="performance"&&<PerformanceLab/>}
   <footer>RAF CHESS SUPERCOMPUTER <span>BUILD 0.1.0 · LOCAL PROTOTYPE</span></footer></div></main></div>
 }
 function Stat({label,value,note}:{label:string;value:string;note:string}){return <div className="stat-card"><span>{label}</span><strong>{value}</strong><small>{note}</small></div>}
