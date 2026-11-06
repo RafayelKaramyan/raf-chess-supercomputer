@@ -17,7 +17,8 @@ function App(){
  const [selected,setSelected]=useState<Square|null>(null);
  const [history,setHistory]=useState<string[]>([]);
  const [pgn,setPgn]=useState("");
- const [gameName,setGameName]=useState("Training game");\n const [savedGames,setSavedGames]=useState<SavedGame[]>(()=>{try{return JSON.parse(localStorage.getItem("raf-saved-games")||"[]")}catch{return[]}});
+ const [gameName,setGameName]=useState("Training game");
+ const [savedGames,setSavedGames]=useState<SavedGame[]>(()=>{try{return JSON.parse(localStorage.getItem("raf-saved-games")||"[]")}catch{return[]}});
  const [message,setMessage]=useState("White to move");
  const [studentName,setStudentName]=useState("");
  const [students,setStudents]=useState<string[]>(()=>{try{return JSON.parse(localStorage.getItem("raf-students")||"[]")}catch{return[]}});
