@@ -13,3 +13,15 @@
 .saved-game-open b,.saved-game-open small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .saved-game-open b{font-size:11px}.saved-game-open small{font-size:9px;color:#819889;margin-top:4px}
 .delete-game{border:0;background:transparent;color:#829889;padding:7px;cursor:pointer;border-radius:5px}.delete-game:hover{background:#35201d;color:#f1a89d}
+
+.module-form{display:grid;gap:8px;margin-top:20px;max-width:760px}
+.module-form label{font:10px 'DM Mono';letter-spacing:1px;color:#8aa391;margin-top:7px}
+.module-form input,.module-form textarea,.module-form select{width:100%;background:#08130d;border:1px solid #263b2d;border-radius:7px;padding:11px 12px;color:#e5f0e8;outline:none;font:12px 'DM Sans'}
+.module-form textarea{min-height:88px;resize:vertical}.module-form input:focus,.module-form textarea:focus,.module-form select:focus{border-color:#58916a}
+.module-form select{max-width:260px}.module-form .primary{justify-self:start;margin-top:7px}
+.form-error{font-size:11px;color:#f0a69c;margin:3px 0}
+.module-list-panel{margin-top:16px}.module-list{display:grid;gap:8px;margin-top:16px}
+.module-item{display:flex;align-items:flex-start;gap:12px;padding:13px;border:1px solid #203328;border-radius:8px;background:#101d15}
+.module-item-main{flex:1;min-width:0}.module-item-main>b{font-size:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.module-item-main code{display:block;color:#b3d6bd;background:#0a150e;border:1px solid #1c3023;border-radius:5px;padding:9px;margin-top:9px;white-space:pre-wrap;overflow-wrap:anywhere;font:10px 'DM Mono'}
+.module-item-main p{font-size:11px;color:#8ca193;line-height:1.6;margin:9px 0 0;white-space:pre-wrap}
