@@ -61,5 +61,4 @@ function App(){
 }
 function Stat({label,value,note}:{label:string;value:string;note:string}){return <div className="stat-card"><span>{label}</span><strong>{value}</strong><small>{note}</small></div>}
 function Action({icon,title,desc,onClick}:{icon:React.ReactNode;title:string;desc:string;onClick:()=>void}){return <button className="action-row" onClick={onClick}><span className="action-icon">{icon}</span><span><b>{title}</b><small>{desc}</small></span><ChevronRight size={17}/></button>}
-function InfoPage({eyebrow,title,desc,cards}:{eyebrow:string;title:string;desc:string;cards:string[][]}){return <><div className="page-heading"><div><div className="eyebrow">{eyebrow}</div><h1>{title}</h1><p>{desc}</p></div></div><div className="feature-grid">{cards.map(([name,sub,detail])=><section className="panel feature-card" key={name}><div className="feature-icon"><Brain size={20}/></div><h2>{name}</h2><span className="tag">{sub}</span><p className="muted">{detail}</p><span className="coming">MODULE FOUNDATION</span></section>)}</div></>}
 export default App;
