@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Chess } from "chess.js";
-import { BookOpen, Brain, Plus, Trash2 } from "lucide-react";
+import { Activity, BookOpen, Brain, Plus, Target, Trash2 } from "lucide-react";
 type OpeningEntry = { id: string; name: string; pgn: string; notes: string };
 type OpponentEntry = { id: string; name: string; color: string; pgn: string; notes: string };
 export function OpeningLab() {
@@ -13,6 +13,28 @@ export function OpeningLab() {
  <section className="panel module-list-panel"><div className="panel-head"><div><div className="eyebrow">YOUR DATABASE</div><h2>Saved repertoire lines</h2></div><span className="tag">{items.length} LINES</span></div>{items.length===0?<div className="empty-state"><div className="empty-icon"><BookOpen/></div><b>Your repertoire is empty</b><span>Add your first line above. The data stays in this browser.</span></div>:<div className="module-list">{items.map(item=><div className="module-item" key={item.id}><div className="module-item-main"><b>{item.name}</b><code>{item.pgn}</code>{item.notes&&<p>{item.notes}</p>}</div><button className="delete-game" onClick={()=>remove(item.id)} title="Delete line"><Trash2 size={14}/></button></div>)}</div>}</section></>;
 }
 type StoredGame = { id: string; name: string; pgn: string; savedAt: string };
+type TacticEntry={id:string;title:string;fen:string;solution:string;notes:string};
+function playSanLine(fen:string,line:string){
+ const game=new Chess(fen);
+ const clean=line.replace(/\{[^}]*\}/g," ").replace(/\([^)]*\)/g," ").replace(/\d+\.(?:\.\.)?/g," ").trim();
+ const tokens=clean.split(/\s+/).filter(token=>token&&!["1-0","0-1","1/2-1/2","*"].includes(token));
+ for(const token of tokens)game.move(token);
+ return game.history();
+}
+export function TacticalTrainer(){
+ const [items,setItems]=useState<TacticEntry[]>(()=>{try{return JSON.parse(localStorage.getItem("raf-tactics")||"[]")}catch{return[]}});
+ const [title,setTitle]=useState("Calculation exercise"),[fen,setFen]=useState(""),[solution,setSolution]=useState(""),[notes,setNotes]=useState(""),[error,setError]=useState("");
+ const [active,setActive]=useState<TacticEntry|null>(null),[answer,setAnswer]=useState(""),[feedback,setFeedback]=useState("");
+ const save=()=>{try{if(!title.trim()||!fen.trim()||!solution.trim()){setError("Enter a title, FEN position, and solution line.");return;}const moves=playSanLine(fen,solution);if(!moves.length){setError("The solution must contain at least one legal move.");return;}const normalized=moves.join(" ");const next=[{id:Date.now().toString(),title:title.trim(),fen:fen.trim(),solution:normalized,notes:notes.trim()},...items];setItems(next);localStorage.setItem("raf-tactics",JSON.stringify(next));setError("");setSolution("");setNotes("");}catch{setError("Invalid FEN or illegal SAN solution. Verify the position and move order.");}};
+ const remove=(id:string)=>{const next=items.filter(x=>x.id!==id);setItems(next);localStorage.setItem("raf-tactics",JSON.stringify(next));if(active?.id===id)setActive(null);};
+ const check=()=>{if(!active)return;try{const moves=playSanLine(active.fen,answer);const expected=active.solution.split(" ");setFeedback(moves.length===expected.length&&moves.every((m,i)=>m===expected[i])?"Correct line. The entered moves match the saved solution.":"Not the saved solution. Recalculate the position and try again.");}catch{setFeedback("The entered line contains an illegal move or invalid SAN.");}};
+ return <><div className="page-heading"><div><div className="eyebrow">CALCULATION TRAINING</div><h1>Tactical trainer</h1><p>Create your own FEN-based exercises and validate your calculated SAN line against the saved solution.</p></div></div>
+ <div className="tactics-layout"><section className="panel"><div className="panel-head"><div><div className="eyebrow">EXERCISE BUILDER</div><h2>Add a position</h2></div><span className="tag">LEGAL MOVE CHECK</span></div><div className="module-form"><label>EXERCISE TITLE</label><input value={title} onChange={e=>setTitle(e.target.value)}/><label>STARTING FEN</label><textarea value={fen} onChange={e=>setFen(e.target.value)} placeholder="Paste a FEN position..."/><label>SOLUTION LINE · SAN</label><textarea value={solution} onChange={e=>setSolution(e.target.value)} placeholder="1. Nxf7 Kxf7 2. Qxd8"/><label>TRAINING NOTE</label><textarea value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Theme, candidate moves, calculation cues..."/>{error&&<p className="form-error">{error}</p>}<button className="primary" onClick={save}><Plus size={15}/> Save exercise</button></div></section>
+ <section className="panel"><div className="panel-head"><div><div className="eyebrow">PRACTICE MODE</div><h2>{active?active.title:"Choose an exercise"}</h2></div>{active&&<button className="secondary" onClick={()=>{setActive(null);setFeedback("");setAnswer("");}}>Close</button>}</div>{active?<div className="practice-box"><label>POSITION FEN</label><code>{active.fen}</code><p className="muted">Calculate the full line from the side to move. Enter SAN moves separated by spaces.</p><textarea value={answer} onChange={e=>setAnswer(e.target.value)} placeholder="Enter your calculated line..."/><button className="primary" onClick={check}>Check solution</button>{feedback&&<p className={feedback.startsWith("Correct")?"form-success":"form-error"}>{feedback}</p>}{active.notes&&<p className="muted">{active.notes}</p>}</div>:<div className="empty-state"><div className="empty-icon"><Target/></div><b>No exercise selected</b><span>Choose a saved exercise below to practice.</span></div>}</section></div>
+ <section className="panel module-list-panel"><div className="panel-head"><div><div className="eyebrow">PUZZLE LIBRARY</div><h2>Your exercises</h2></div><span className="tag">{items.length} EXERCISES</span></div>{items.length===0?<div className="empty-state"><div className="empty-icon"><Activity/></div><b>No exercises saved</b><span>Add a FEN and a legal solution line to build your private puzzle set.</span></div>:<div className="module-list">{items.map(item=><div className="module-item" key={item.id}><div className="module-item-main"><b>{item.title}</b><code>{item.solution}</code></div><button className="secondary" onClick={()=>{setActive(item);setAnswer("");setFeedback("");}}>Practice</button><button className="delete-game" onClick={()=>remove(item.id)} title="Delete exercise"><Trash2 size={14}/></button></div>)}</div>}</section>
+ <p className="muted">This validates move legality and compares your SAN sequence with the exercise author’s saved line. It does not independently verify that the line is objectively best; engine validation is a future integration.</p></>;
+}
+
 export function PerformanceLab() {
  const [games] = useState<StoredGame[]>(()=>{try{return JSON.parse(localStorage.getItem("raf-saved-games")||"[]")}catch{return[]}});
  const reports=games.map(item=>{try{const game=new Chess();game.loadPgn(item.pgn);const result=game.header().Result||"*";return {id:item.id,name:item.name,savedAt:item.savedAt,plies:game.history().length,result};}catch{return {id:item.id,name:item.name,savedAt:item.savedAt,plies:0,result:"?"};}});
