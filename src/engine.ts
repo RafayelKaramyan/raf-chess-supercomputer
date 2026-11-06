@@ -8,7 +8,7 @@ export type EngineResult = {
 
 export function analyzePosition(fen: string, depth = 15): Promise<EngineResult> {
   return new Promise((resolve, reject) => {
-    const worker = new Worker(`${import.meta.env.BASE_URL}stockfish/stockfish-19-lite-single.js`);
+    const worker = new Worker(new URL("stockfish/stockfish-19-lite-single.js", document.baseURI).toString());
     let latest: EngineResult = { depth: 0, scoreCp: null, mate: null, bestMove: "", principalVariation: [] };
     let settled = false;
     const finish = (error?: Error) => {
