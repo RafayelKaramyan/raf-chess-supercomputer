@@ -3,8 +3,8 @@ import { Chess, type Square } from "chess.js";
 import { Activity, BookOpen, Brain, ChevronLeft, ChevronRight, ClipboardList, Download, GraduationCap, LayoutDashboard, Plus, RotateCcw, Save, Target, Trash2, Upload, Users } from "lucide-react";
 import "./styles.css";
 
-type SavedGame = { id: string; name: string; pgn: string; savedAt: string };\ntype Tab = "overview" | "player" | "students" | "openings" | "opponents" | "tactics" | "performance";
-const initialFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+type SavedGame = { id: string; name: string; pgn: string; savedAt: string };
+type Tab = "overview" | "player" | "students" | "openings" | "opponents" | "tactics" | "performance";
 const files = ["a","b","c","d","e","f","g","h"];
 const glyph: Record<string,string> = {wk:"♔",wq:"♕",wr:"♖",wb:"♗",wn:"♘",wp:"♙",bk:"♚",bq:"♛",br:"♜",bb:"♝",bn:"♞",bp:"♟"};
 const nav: {id:Tab;label:string;icon:React.ElementType}[] = [
@@ -15,12 +15,13 @@ function App(){
  const [game,setGame]=useState(()=>new Chess());
  const [selected,setSelected]=useState<Square|null>(null);
  const [history,setHistory]=useState<string[]>([]);
- const [pgn,setPgn]=useState("");\n const [gameName,setGameName]=useState("Training game");\n const [savedGames,setSavedGames]=useState<SavedGame[]>(()=>{try{return JSON.parse(localStorage.getItem("raf-saved-games")||"[]")}catch{return[]}});
+ const [pgn,setPgn]=useState("");
+ const [gameName,setGameName]=useState("Training game");\n const [savedGames,setSavedGames]=useState<SavedGame[]>(()=>{try{return JSON.parse(localStorage.getItem("raf-saved-games")||"[]")}catch{return[]}});
  const [message,setMessage]=useState("White to move");
  const [studentName,setStudentName]=useState("");
  const [students,setStudents]=useState<string[]>(()=>{try{return JSON.parse(localStorage.getItem("raf-students")||"[]")}catch{return[]}});
- const [rating,setRating]=useState("1794");
- const [goal,setGoal]=useState("2200");
+ const [rating]=useState("1794");
+ const [goal]=useState("2200");
  const [orientation,setOrientation]=useState<"white"|"black">("white");
  const board=useMemo(()=>game.board(),[game]);
  const legal=selected?game.moves({square:selected,verbose:true}).map(m=>m.to):[];
