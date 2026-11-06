@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Chess } from "chess.js";
+import { analyzePosition, type EngineResult } from "./engine";
 import { Activity, BookOpen, Brain, Plus, Target, Trash2 } from "lucide-react";
 type OpeningEntry = { id: string; name: string; pgn: string; notes: string };
 type OpponentEntry = { id: string; name: string; color: string; pgn: string; notes: string };
@@ -87,8 +88,39 @@ type ReviewMove = import("chess.js").Move;
 const reviewFiles = ["a","b","c","d","e","f","g","h"];
 const reviewGlyph: Record<string,string> = {wk:"♔",wq:"♕",wr:"♖",wb:"♗",wn:"♘",wp:"♙",bk:"♚",bq:"♛",br:"♜",bb:"♝",bn:"♞",bp:"♟"};
 
+function scoreLabel(result: EngineResult) {
+ if (result.mate !== null) return result.mate > 0 ? `Մատ՝ ${result.mate} քայլից` : `Մատ՝ ${Math.abs(result.mate)} քայլից՝ մրցակցի օգտին`;
+ if (result.scoreCp === null) return "Գնահատականը հասանելի չէ";
+ const score = result.scoreCp / 100;
+ return `${score > 0 ? "+" : ""}${score.toFixed(2)}`;
+}
+
+function uciToSan(fen: string, uci: string) {
+ const match = uci.match(/^([a-h][1-8])([a-h][1-8])([qrbn])?$/);
+ if (!match) return uci;
+ try {
+  const game = new Chess(fen);
+  return game.move({ from: match[1] as import("chess.js").Square, to: match[2] as import("chess.js").Square, promotion: match[3] }).san;
+ } catch { return uci; }
+}
+
+function uciLineToSan(fen: string, line: string[]) {
+ const game = new Chess(fen);
+ const san: string[] = [];
+ for (const uci of line) {
+  const match = uci.match(/^([a-h][1-8])([a-h][1-8])([qrbn])?$/);
+  if (!match) break;
+  try { san.push(game.move({ from: match[1] as import("chess.js").Square, to: match[2] as import("chess.js").Square, promotion: match[3] }).san); }
+  catch { break; }
+ }
+ return san.join(" ");
+}
+
 export function GameReviewLab() {
  const [pgn,setPgn]=useState("");
+ const [engineBusy,setEngineBusy]=useState(false);
+ const [engineError,setEngineError]=useState("");
+ const [engineReport,setEngineReport]=useState<{current:EngineResult;bestSan:string;pv:string;moveSan:string;quality:string;loss:number|null;previousScore:string}|null>(null);
  const [moves,setMoves]=useState<ReviewMove[]>([]);
  const [headers,setHeaders]=useState<Record<string,string>>({});
  const [index,setIndex]=useState(0);
@@ -113,6 +145,34 @@ export function GameReviewLab() {
   }
   return current;
  },[moves,index]);
+ const analyzeWithEngine=async()=>{
+  if(!moves.length){setEngineError("Նախ բեռնիր պարտիայի PGN-ը։");return;}
+  setEngineBusy(true);setEngineError("");setEngineReport(null);
+  try{
+   const currentResult=await analyzePosition(position.fen(),16);
+   const currentBest=uciToSan(position.fen(),currentResult.bestMove);
+   const currentPv=uciLineToSan(position.fen(),currentResult.principalVariation);
+   let moveSan="";let quality="Ընթացիկ դիրքի գնահատում";let loss:number|null=null;let previousScore="—";let bestSan="";
+   if(index>0){
+    const before=new Chess();
+    for(const move of moves.slice(0,index-1))before.move({from:move.from,to:move.to,promotion:move.promotion});
+    const beforeResult=await analyzePosition(before.fen(),16);
+    moveSan=moves[index-1].san;
+    bestSan=uciToSan(before.fen(),beforeResult.bestMove);
+    if(beforeResult.scoreCp!==null&&currentResult.scoreCp!==null){
+     const beforeMover=beforeResult.scoreCp;
+     const afterMover=-currentResult.scoreCp;
+     loss=Math.max(0,beforeMover-afterMover);
+     quality=loss>=300?"Կոպիտ սխալ":loss>=150?"Սխալ":loss>=70?"Անճշտություն":"Լավ կամ ընդունելի քայլ";
+    }else if(beforeResult.mate!==null||currentResult.mate!==null){
+     quality="Մատային սպառնալիք․ անհրաժեշտ է դիտարկել մատային գնահատականը";
+    }
+    previousScore=scoreLabel(beforeResult);
+   }
+   setEngineReport({current:currentResult,bestSan:currentBest,pv:currentPv,moveSan,quality,loss,previousScore});
+  }catch(error){setEngineError(error instanceof Error?error.message:"Շարժիչային վերլուծությունը չհաջողվեց։");}
+  finally{setEngineBusy(false);}
+ };
  const board=position.board();
  const squares=orientation==="white"
   ?board.flatMap((row,r)=>row.map((piece,c)=>({piece,sq:(reviewFiles[c]+(8-r)) as import("chess.js").Square,r,c})))
@@ -141,7 +201,8 @@ export function GameReviewLab() {
     {moves.length===0?<div className="empty-state"><div className="empty-icon">♞</div><b>Պարտիա բեռնված չէ</b><span>Վերլուծությունը սկսելու համար ներքևում տեղադրիր PGN-ը։</span></div>:<div className="review-moves">{Array.from({length:Math.ceil(moves.length/2)},(_,i)=><div className="review-move-row" key={i}><span>{i+1}.</span><button className={index===i*2+1?"chosen":""} onClick={()=>setIndex(i*2+1)}>{moves[i*2].san}</button>{moves[i*2+1]&&<button className={index===i*2+2?"chosen":""} onClick={()=>setIndex(i*2+2)}>{moves[i*2+1].san}</button>}</div>)}</div>}
    </section>
   </div>
+  <section className="panel engine-panel"><div className="panel-head"><div><div className="eyebrow">ՏԵՂԱՅԻՆ ՇԱԽՄԱՏԱՅԻՆ ՇԱՐԺԻՉ</div><h2>Stockfish վերլուծություն</h2></div><span className="tag">WASM · ԱՆՎՃԱՐ</span></div><p className="muted">Գործարկիր շարժիչը՝ ընթացիկ դիրքի գնահատականը, լավագույն քայլը և տարբերակը ստանալու համար։ Եթե ընտրել ես պարտիայի քայլ, համակարգը նաև համեմատում է այդ քայլից առաջ և հետո ստացված գնահատականները։</p><button className="primary" onClick={analyzeWithEngine} disabled={engineBusy||!moves.length}>{engineBusy?"Վերլուծում է…":"Վերլուծել ընթացիկ դիրքը"}</button>{engineError&&<p className="form-error">{engineError}</p>}{engineReport&&<div className="engine-results"><div className="stats-grid"><div className="stat-card"><span>ԴԻՐՔԻ ԳՆԱՀԱՏԱԿԱՆ</span><strong>{scoreLabel(engineReport.current)}</strong><small>Խորություն՝ {engineReport.current.depth}</small></div><div className="stat-card"><span>ԼԱՎԱԳՈՒՅՆ ՔԱՅԼԸ</span><strong>{engineReport.current.bestMove?engineReport.bestSan:"—"}</strong><small>Ընթացիկ դիրքում</small></div>{engineReport.moveSan&&<div className="stat-card"><span>ՔՈ ՔԱՅԼԻ ԴԱՍԱԿԱՐԳՈՒՄ</span><strong>{engineReport.quality}</strong><small>{engineReport.loss===null?"Մատային գնահատական":`Գնահատականի կորուստ՝ ${(engineReport.loss/100).toFixed(2)} զինվոր`}</small></div>}</div>{engineReport.moveSan&&<div className="engine-explanation"><b>Քայլի մարզչական գնահատում</b><p>Քո քայլը՝ <strong>{engineReport.moveSan}</strong>։ Քայլից առաջ գնահատականը՝ {engineReport.previousScore}։ {engineReport.bestSan&&<>Այդ դիրքում շարժիչի նախընտրած այլընտրանքը՝ <strong>{engineReport.bestSan}</strong>։ </>} {engineReport.loss!==null?(engineReport.loss>=70?`Քայլից հետո դիրքի գնահատականը վատացել է մոտ ${(engineReport.loss/100).toFixed(2)} զինվորով։ Համեմատիր առաջարկված քայլի գաղափարը քո ընտրության հետ և ստուգիր մրցակցի հակախաղը։`:"Շարժիչի այս խորության սահմաններում քայլը չի առաջացրել էական գնահատականային անկում։ Սա ինքնին չի նշանակում, որ քայլը միակ լավագույնն էր։"):"Դիրքում առկա է մատային հաշվարկ, ուստի սովորական զինվորային տարբերությամբ քայլի որակը դասակարգել հնարավոր չէ։"}</p></div>}<div className="engine-explanation"><b>Լավագույն շարունակության տարբերակ</b><p>{engineReport.pv||engineReport.bestSan||"Շարունակությունը հասանելի չէ"}</p><small>Սա Stockfish-ի հաշվարկած տարբերակն է, ոչ թե բնական լեզվով ամբողջական ռազմավարական մեկնաբանություն։</small></div></div>}</section>
   <section className="panel review-import"><div className="panel-head"><div><div className="eyebrow">PGN ՄՈՒՏՔԱԳՐՈՒՄ</div><h2>Բեռնել պարտիա</h2></div><span className="tag">CHESS.JS ՍՏՈՒԳՈՒՄ</span></div><textarea value={pgn} onChange={e=>setPgn(e.target.value)} placeholder={'[Մրցաշար "Training game"]\n[Սպիտակներ "Շախմատիստ"]\n[Սևեր "Մրցակից"]\n\n1. c4 e5 2. Nc3 Nf6 *'}/>{error&&<p className={error.includes("copied")?"form-success":"form-error"}>{error}</p>}<button className="primary" onClick={load}>Բեռնել PGN-ը վերլուծության համար</button></section>
-  <p className="muted">Այս բաժինը վերարտադրում է PGN-ի օրինական քայլերը և ցուցադրում դիրքի FEN-ը։ Այն դեռ չի տրամադրում շարժիչային գնահատականներ, լավագույն քայլերի առաջարկներ կամ ճշգրտության միավորներ։</p>
+  <p className="muted">Stockfish-ը հաշվարկում է դիրքի գնահատականն ու լավագույն շարունակությունը։ Քայլի որակի դասակարգումը մոտավոր է և կախված է ընտրված 16 խորությունից․ այն չի փոխարինում մարզչի ամբողջական ռազմավարական բացատրությանը։</p>
  </>;
 }
